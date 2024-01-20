@@ -1,0 +1,59 @@
+root_dir: ${oc.env:PROJECT_ROOT}
+data_dir: ${root_dir}/data
+
+autoencoder:
+  _target_: src.tutorial.lvl2_1_validate_model.LitAutoEncoder
+  encoder:
+    _target_: src.tutorial.lvl2_1_validate_model.Encoder
+    img_width: 28
+    img_height: 28
+    img_channel: 1
+    hiddens: [64, 3]
+  decoder:
+    _target_: src.tutorial.lvl2_1_validate_model.Decoder
+    img_width: 28
+    img_height: 28
+    img_channel: 1
+    hiddens: [3, 64]
+  lr: 2e-3
+
+dataset:
+  _target_: torchvision.datasets.MNIST
+  root: ${data_dir}
+  download: true
+  train: true
+  transform:
+    _target_: torchvision.transforms.ToTensor
+
+sample_split: [50000, 10000]
+
+train_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  shuffle: true
+  num_workers: 7
+  batch_size: 64
+
+val_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  shuffle: false
+  num_workers: 7
+  batch_size: 64
+
+test_dataloader:
+  _target_: torch.utils.data.DataLoader
+  shuffle: false
+  num_workers: 7
+  batch_size: 64
+  dataset:
+    _target_: torchvision.datasets.MNIST
+    root: ${data_dir}
+    download: true
+    train: false
+    transform:
+      _target_: torchvision.transforms.ToTensor
+
+trainer:
+  _target_: lightning.Trainer
+  max_epochs: 2
