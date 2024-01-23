@@ -1,16 +1,17 @@
 root_dir: ${oc.env:PROJECT_ROOT}
 data_dir: ${root_dir}/data
+output_dir: ${hydra:runtime.output_dir}
 
 autoencoder:
-  _target_: src.tutorial.lvl2_1_validate_model.LitAutoEncoder
+  _target_: src.tutorial.lvl2_validate_model.LitAutoEncoder
   encoder:
-    _target_: src.tutorial.lvl2_1_validate_model.Encoder
+    _target_: src.tutorial.lvl2_validate_model.Encoder
     img_width: 28
     img_height: 28
     img_channel: 1
     hiddens: [64, 3]
   decoder:
-    _target_: src.tutorial.lvl2_1_validate_model.Decoder
+    _target_: src.tutorial.lvl2_validate_model.Decoder
     img_width: 28
     img_height: 28
     img_channel: 1
@@ -57,3 +58,8 @@ test_dataloader:
 trainer:
   _target_: lightning.Trainer
   max_epochs: 2
+  default_root_dir: ${output_dir}
+  callbacks:
+    - _target_: lightning.pytorch.callbacks.early_stopping.EarlyStopping
+      monitor: val/loss
+      mode: min

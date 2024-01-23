@@ -1,0 +1,30 @@
+root_dir: ${oc.env:PROJECT_ROOT}
+data_dir: ${root_dir}/data/dogs-vs-cats
+output_dir: ${hydra:runtime.output_dir}
+
+datamodule:
+  _target_: src.tutorial.lvl3_transfer_learning.DogCatDataModule
+  data_dir: ${data_dir}
+  train_dir: train
+  test_dir: test1
+  train_val_split: [20000, 5000]
+
+  train_transform:
+    _target_: src.tutorial.lvl3_transfer_learning.Transform
+    size: [224, 224] 
+    horizontal_flip_p: 0.5
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+    train: true
+
+  predict_transform:
+    _target_: src.tutorial.lvl3_transfer_learning.Transform
+    size: [224, 224] 
+    horizontal_flip_p: 0.5
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+    train: false
+  
+  batch_size: 16
+
+

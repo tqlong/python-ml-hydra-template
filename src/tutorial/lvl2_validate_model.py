@@ -1,13 +1,13 @@
+import rootutils
+import hydra
+from omegaconf import DictConfig, OmegaConf
 import torch as T
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset, random_split
 import lightning as L
 
-from omegaconf import DictConfig, OmegaConf
-import hydra
-
-import rootutils
+L.seed_everything(103)
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 
@@ -56,7 +56,7 @@ class LitAutoEncoder(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, xhat, loss = self.step(batch)
-        self.log("train/loss", loss)
+        self.log("train/loss", loss, on_epoch=True, prog_bar=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -65,7 +65,7 @@ class LitAutoEncoder(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, xhat, loss = self.step(batch)
-        self.log("val/loss", loss)
+        self.log("val/loss", loss, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         optimizer = T.optim.Adam(self.parameters(), lr=self.hparams.lr)
@@ -83,6 +83,7 @@ def main(cfg: DictConfig):
         cfg.val_dataloader)(val_dataset)
     test_dataloader: DataLoader = hydra.utils.instantiate(cfg.test_dataloader)
     autoencoder: LitAutoEncoder = hydra.utils.instantiate(cfg.autoencoder)
+
     trainer: L.Trainer = hydra.utils.instantiate(cfg.trainer)
 
     trainer.fit(model=autoencoder, train_dataloaders=train_dataloader,
