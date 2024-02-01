@@ -7,6 +7,7 @@ datamodule:
   data_dir: ${data_dir}
   train_dir: train
   test_dir: test1
+  num_workers: 6
   train_val_split: [20000, 5000]
 
   train_transform:
@@ -23,8 +24,69 @@ datamodule:
     horizontal_flip_p: 0.5
     mean: [0.485, 0.456, 0.406]
     std: [0.229, 0.224, 0.225]
-    train: false
+    train: true
   
   batch_size: 16
 
+module:
+  _target_: src.tutorial.lvl3_transfer_learning.LitModule
+  csv_output: ${output_dir}/submission.csv
+  n_classes: 2
+  net:
+    _target_: src.tutorial.lvl3_transfer_learning.Resnet
+    backbone_name: resnet50
+    n_classes: ${module.n_classes}
 
+  criterion:
+    _target_: torch.nn.CrossEntropyLoss
+
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 0.001
+    weight_decay: 0.0
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 10
+
+train: true
+ckpt_path: null #/data/tqlong/ff/outputs/2024-01-23/18-49-47/checkpoints/epoch_000.ckpt
+
+trainer:
+  _target_: lightning.Trainer
+  max_epochs: 3
+  default_root_dir: ${output_dir}
+  fast_dev_run: false
+  callbacks:
+    - _target_: lightning.pytorch.callbacks.EarlyStopping
+      min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
+      verbose: False # verbosity mode
+      strict: True # whether to crash the training if monitor is not found in the validation metrics
+      check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
+      stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
+      divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
+      check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
+      # log_rank_zero_only: False  # this keyword argument isn't available in stable version
+      monitor: "val/loss"
+      patience: 10
+      mode: "min"
+    - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+      verbose: False # verbosity mode
+      save_top_k: 1 # save k best models (determined by above metric)
+      save_weights_only: False # if True, then only the model’s weights will be saved
+      every_n_train_steps: null # number of training steps between checkpoints
+      train_time_interval: null # checkpoints are monitored at the specified time interval
+      every_n_epochs: null # number of epochs between checkpoints
+      save_on_train_epoch_end: null # whether to run checkpointing at the end of the training epoch or the end of validation
+      dirpath: ${output_dir}/checkpoints
+      filename: "epoch_{epoch:03d}"
+      monitor: "val/loss"
+      mode: "min"
+      save_last: True
+      auto_insert_metric_name: False
+    - _target_: lightning.pytorch.callbacks.ModelSummary
+      max_depth: -1
