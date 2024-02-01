@@ -247,26 +247,26 @@ def main(cfg: DictConfig):
 
     data_module: L.LightningDataModule = hydra.utils.instantiate(
         cfg.datamodule)
-    test_datamodule(data_module)
-    # module: L.LightningModule = hydra.utils.instantiate(cfg.module)
-    # # test_module(module)
-    # trainer: L.Trainer = hydra.utils.instantiate(cfg.trainer)
+    # test_datamodule(data_module)
+    module: L.LightningModule = hydra.utils.instantiate(cfg.module)
+    # test_module(module)
+    trainer: L.Trainer = hydra.utils.instantiate(cfg.trainer)
 
-    # if cfg.get("train"):
-    #     logging.info("Starting training!")
-    #     trainer.fit(model=module, datamodule=data_module)
+    if cfg.get("train"):
+        logging.info("Starting training!")
+        trainer.fit(model=module, datamodule=data_module)
 
-    # logging.info("Starting prediction!")
-    # ckpt_path = ""
-    # if cfg.get("ckpt_path"):
-    #     ckpt_path = cfg.get("ckpt_path")
-    # elif cfg.get("train"):
-    #     ckpt_path = trainer.checkpoint_callback.best_model_path
-    # if ckpt_path == "":
-    #     ckpt_path = None  # use current weights
-    # else:
-    #     logging.info(f"Use best weights at {ckpt_path}")
-    # trainer.predict(model=module, datamodule=data_module, ckpt_path=ckpt_path)
+    logging.info("Starting prediction!")
+    ckpt_path = ""
+    if cfg.get("ckpt_path"):
+        ckpt_path = cfg.get("ckpt_path")
+    elif cfg.get("train"):
+        ckpt_path = trainer.checkpoint_callback.best_model_path
+    if ckpt_path == "":
+        ckpt_path = None  # use current weights
+    else:
+        logging.info(f"Use best weights at {ckpt_path}")
+    trainer.predict(model=module, datamodule=data_module, ckpt_path=ckpt_path)
 
 
 def test_datamodule(dm: DogCatDataModule):
@@ -275,7 +275,8 @@ def test_datamodule(dm: DogCatDataModule):
     for i in range(20):
         logging.info(f"loop {i}")
         for x, y, p in dm.train_dataloader():
-            continue
+            print(x.shape, y.shape, p)
+            break
 
     dm.setup(stage="predict")
     for x, y, p in dm.predict_dataloader():
